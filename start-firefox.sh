@@ -11,12 +11,13 @@ GID=$(id -g $USER)
 ### variant 1
 # share X11 socket directly 
 #
+# (NOTE: the -u root is just for the bootstrapping. Firefox will run not run as root.)
 docker run -ti --rm -e DISPLAY\
            -v /tmp/.X11-unix:/tmp/.X11-unix:ro -u root docker-firefox-$UID-$GID
 
 ### variant 2
 # share the .Xauthority file
-# (NOTE: the -u root is just for the bootstrapping)
+# (NOTE: the -u root is just for the bootstrapping. Firefox will not run as root.)
 #docker run -ti --rm --cap-add SYS_PTRACE --security-opt apparmor:unconfined -e DISPLAY \
 #       -v $HOME/.Xauthority:/home/developer/.Xauthority:ro \
 #       --net=host -u root docker-firefox-$UID-$GID
