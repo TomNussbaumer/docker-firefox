@@ -1,22 +1,35 @@
 #!/bin/sh
 
-#------------------------------------------------------------------------------------
-# Starts the firefox docker container. To keep things simple some of the X11 stuff 
-# directly shared is with the container (but in read-only mode ;)
+# start the firefox docker container
 #
 # it shows some warnings but still comes up ...
-# (sorrily there seems no easy way to fix the problems)
-#------------------------------------------------------------------------------------
 
 UID=$(id -u $USER)
 GID=$(id -g $USER)
 #DISPLAY_TO_USE=$(ifconfig docker0 | grep "inet addr:" | awk '{print $2}' | cut -d: -f2):0.0
 
-# variant 1: share X11 socket directly 
-#docker run -ti --rm -e DISPLAY=192.168.0.13:0.0 \
-#           -v /tmp/.X11-unix:/tmp/.X11-unix:ro docker-firefox-$UID-$GID
+### variant 1
+# share X11 socket directly 
+#
+docker run -ti --rm -e DISPLAY\
+           -v /tmp/.X11-unix:/tmp/.X11-unix:ro -u root docker-firefox-$UID-$GID
 
-# variant 2: share the .Xauthority file
-docker run -ti --rm -e DISPLAY \
-       -v $HOME/.Xauthority:/home/developer/.Xauthority:ro \
-       --net=host docker-firefox-$UID-$GID	
+### variant 2
+# share the .Xauthority file
+# (NOTE: the -u root is just for the bootstrapping)
+#docker run -ti --rm --cap-add SYS_PTRACE --security-opt apparmor:unconfined -e DISPLAY \
+#       -v $HOME/.Xauthority:/home/developer/.Xauthority:ro \
+#       --net=host -u root docker-firefox-$UID-$GID
+
+### to debug I was in need to run strace, but the host's apparmor setting denied it
+### variant A (the better one):
+#docker run -ti --rm --cap-add SYS_PTRACE --security-opt apparmor:unconfined -e DISPLAY \
+#       -v $HOME/.Xauthority:/home/developer/.Xauthority:ro \
+#       --net=host -u root docker-firefox-$UID-$GID /sbin/my_init -- \
+#       /sbin/setuser developer bash 
+
+### variant B
+#docker run -ti --rm --privileged -e DISPLAY \
+#       -v $HOME/.Xauthority:/home/developer/.Xauthority:ro \
+#       --net=host -u root docker-firefox-$UID-$GID /sbin/my_init -- \
+#       /sbin/setuser developer bash 
