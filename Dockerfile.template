@@ -1,0 +1,21 @@
+# Quick in dirty Firefox container
+#
+# NOTE: UID and GID will be replaced by the build script with UID and GID of the
+# running user to match reading rights
+
+FROM ubuntu:14.04
+MAINTAINER Tom Nussbaumer <thomas.nussbaumer@gmx.net>
+RUN apt-get update && \
+    apt-get install -y dbus firefox && \
+    export uid=(UID) gid=(GID) && \
+    mkdir -p /home/developer && \
+    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
+    echo "developer:x:${uid}:" >> /etc/group && \
+    echo "developer ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    chmod 0440 /etc/sudoers && \
+    chown ${uid}:${gid} -R /home/developer && \
+    dbus-uuidgen > /var/lib/dbus/machine-id
+
+USER developer
+ENV HOME /home/developer
+CMD ["/usr/bin/firefox", "-no-remote"]
